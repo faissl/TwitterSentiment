@@ -37,6 +37,9 @@ def get_unique_words(tweet_text):
 	# Create a list of the words in the tweet. 
 	tweet_words = re.sub("[^\w]", " ", tweet_text).split(' ')
 
+	#if __debug__:
+	#	print tweet_words
+
 	return tweet_words
 
 
@@ -45,7 +48,8 @@ def get_unique_words(tweet_text):
 def tweet_score(tweet_text, scores):
 	encoded_tweet = tweet_text.encode('utf-8')
 
-	#print encoded_tweet
+	#if __debug__:
+	#	print encoded_tweet
 
 	# Get unique words from tweet text string
 	tweet_words = get_unique_words(encoded_tweet)
