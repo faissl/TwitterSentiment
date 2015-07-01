@@ -3,10 +3,6 @@ import re     # Regular expressions functionality
 import json   # JSON parsing functionality
 
 
-#DBG = True
-DBG = False
-
-
 class TweetInfo:
 
 	def __init__(self, tweet_score, tweet_word_list):
@@ -46,13 +42,8 @@ def build_dict(file_name):
 # RETURN: tweet words as list
 def get_tweet_words(tweet_text):
 
-	if (DBG):
+	if __debug__:
 		print ("Tweet Text prior to substitution: %s \n") % tweet_text
-
-	# Replace negative contractions with word + not, e.g., shouldn't -> should not
-	# Change can't to cannot
-
-	#chk_text = tweet_text
 
 	tweet_text = tweet_text.lower()
 
@@ -61,6 +52,7 @@ def get_tweet_words(tweet_text):
 		tweet_text = ""
 	else:
 		# Not a retweet...get tweet's words. 
+		# Replace can't with cannot. Replace n't with space and not.
 		strPattern = re.compile("can't", re.IGNORECASE)
 		tweet_text = strPattern.sub("cannot", tweet_text)
 		strPattern = re.compile("n't", re.IGNORECASE)
@@ -77,7 +69,7 @@ def get_tweet_words(tweet_text):
 		# Delete extra white spaces
 		tweet_text = re.sub("\s+",' ', tweet_text)
 
-	if DBG: 
+	if __debug__: 
 		print ("Tweet Text after substitution: %s") % tweet_text
 
 	# Create a list of the words in the tweet. 
@@ -86,11 +78,8 @@ def get_tweet_words(tweet_text):
 	# Remove empty strings
 	tweet_words = filter(lambda flt: flt != "", tweet_words)
 
-	if DBG:
+	if __debug__:
 		print tweet_words
-
-	#if __debug__:
-	#	print tweet_words
 
 	return tweet_words
 
@@ -117,9 +106,8 @@ def tweet_score(tweet_text, scores):
 		else:
 			non_sent_words.append(word)
 
-	if DBG: 
+	if __debug__: 
 		print ("Found sentiment words: %s\t") % non_sent_words
-		print("\n")
 
 	return words_score, non_sent_words
 
@@ -211,7 +199,7 @@ def main():
 	# Get the scores for all streamed tweets that are in English
 	tweet_info = twitter_stream_score(sys.argv[2], scores)
 
-	if DBG: 
+	if __debug__: 
 		for info in tweet_info:
 			print info
 
