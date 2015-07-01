@@ -51,22 +51,31 @@ def get_tweet_words(tweet_text):
 
 	# Replace negative contractions with word + not, e.g., shouldn't -> should not
 	# Change can't to cannot
-	chk_text = tweet_text
-	strPattern = re.compile("can't", re.IGNORECASE)
-	tweet_text = strPattern.sub("cannot", tweet_text)
-	strPattern = re.compile("n't", re.IGNORECASE)
-	tweet_text = strPattern.sub(" not", tweet_text)
 
-	# Delete links and hashtags. Delete single characters. 
-	strPattern = re.compile("http\S*|\s.\s|\W", re.IGNORECASE)
-	tweet_text = strPattern.sub(" ", tweet_text)
+	#chk_text = tweet_text
 
-	# Get rid of carriage returns and new lines
-	tweet_text = tweet_text.replace("\n", " ")
-	tweet_text = tweet_text.replace("\r", " ")
+	tweet_text = tweet_text.lower()
 
-	# Delete extra white spaces
-	tweet_text = re.sub("\s+",' ', tweet_text)
+	# Check for RT - embedded manual retweet in text
+	if tweet_text.find("rt") >= 0:
+		tweet_text = ""
+	else:
+		# Not a retweet...get tweet's words. 
+		strPattern = re.compile("can't", re.IGNORECASE)
+		tweet_text = strPattern.sub("cannot", tweet_text)
+		strPattern = re.compile("n't", re.IGNORECASE)
+		tweet_text = strPattern.sub(" not", tweet_text)
+
+		# Delete links and hashtags. Delete single characters. Delete digits. Delete underscores.
+		strPattern = re.compile("http\S*|\s.\s|\W|\d|\s[a-z]\s|(_)", re.IGNORECASE)
+		tweet_text = strPattern.sub(" ", tweet_text)
+
+		# Get rid of carriage returns and new lines
+		tweet_text = tweet_text.replace("\n", " ")
+		tweet_text = tweet_text.replace("\r", " ")
+
+		# Delete extra white spaces
+		tweet_text = re.sub("\s+",' ', tweet_text)
 
 	if DBG: 
 		print ("Tweet Text after substitution: %s") % tweet_text
@@ -129,7 +138,7 @@ def twitter_stream_score(file_name, scores):
 			tweet_data = json.loads(line)   # Parse JSON file one line at a time
 			# Before you count line, see if it has 'text' key. Only score texts in English.
 			if tweet_data.has_key('text'):
-				if tweet_data['lang'] == 'en': 	
+				if tweet_data['lang'] == 'en' and not tweet_data['retweeted']: 	
 					# Send tweet text. Returns tweet score and list of non-sentiment words. 			
 					words_score, tweet_words = tweet_score(tweet_data['text'], scores) 
 					if words_score != 0: 
@@ -210,9 +219,10 @@ def main():
 	new_terms = build_new_terms(tweet_info, scores)
 
 	# Sort the new terms for printing, largest to smallest absolute value
-	for k, v in sorted(new_terms.items(), key = lambda (k,v) : v[k].score, reverse = True):
-		if v[k].score >= 2:
-			print "%s: %d\n" % k, v[k].score
+	for k, v in sorted(new_terms.items(),
+		               key = lambda (k,v) : abs(new_terms[k].score), reverse = True):
+		if abs(v.score) >= 2:
+			print("%s %0.2f\n") %  (k, v.score)
 
 if __name__ == '__main__':
     main()
